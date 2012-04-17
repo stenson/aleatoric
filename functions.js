@@ -17,30 +17,54 @@ var loadAndSaveSample = function(env, url, name, callback) {
   });
 };
 
-var playSampleWithBuffer = function(env, buffer, start, volume, rate, position) {
+var loadSamplesFromMap = function(env, map, pattern, cback) {
+  var requests = 0;
+  Object.keys(map).forEach(function(name) {
+    requests++;
+    loadAndSaveSample(env, pattern.replace("*", map[name]), name, function() {
+      if (--requests == 0) cback();
+    });
+  });
+};
+
+var attachBuffersToConvolvers = function(env) {
+  env.convolvers = {};
+
+  env.convolverNames.forEach(function(name) {
+    env.convolvers[name] = env.context.createConvolver();
+    env.convolvers[name].buffer = env.buffers[name];
+    env.convolvers[name].connect(env.context.destination);
+  });
+
+  console.log(env.convolvers);
+};
+
+var playSample = function(env, hash) {
+  /* .rate, .volume, .buffer, .convolver, .pan */
+
   var context = env.context;
   var source = context.createBufferSource();
   var panner = context.createPanner();
   var dryGain = context.createGainNode();
   var wetGain = context.createGainNode();
 
-  source.playbackRate.value = rate;
-  dryGain.gain.value = volume;
-  wetGain.gain.value = volume;
-  source.buffer = buffer;
+  source.playbackRate.value = Math.round(hash.rate || 1);
+  wetGain.gain.value = hash.volume || 1;
+  dryGain.gain.value = (hash.volume || 1) / 4;
+  source.buffer = env.buffers[hash.buffer];
 
-  panner.setPosition(position, 0.0, 0.0);
+  panner.setPosition(hash.pan, 0, 0);
   source.connect(panner);
-
   panner.connect(dryGain);
   panner.connect(wetGain);
-
-  wetGain.connect(env.convolver);
+  wetGain.connect(env.convolvers[hash.convolver || "kitchen"]);
   dryGain.connect(context.destination);
 
-  source.noteOn(start);
+  source.noteOn(hash.start || 0);
 
-  return source;
+  console.log(source.playbackRate.value);
+  hash.source = source;
+  return hash;
 };
 
 var processSignal = function(signal, event) {
@@ -73,28 +97,57 @@ var buildSignal = function(env, frequency) {
 };
 
 var notifyRequestStart = function(env, details) {
+  //if (details.type !== "stylesheet") return;
+
+  //console.log("start", details);
   env.howMany++;
   //env.requests[details.requestId] = buildSignal(env, 110 + (env.howMany*100));
-  playSampleWithBuffer(env, env.buffers.start, 0, 0.05, 1, (Math.random()*20)-10);
+  var pan = Math.random()*10 - 5;
+
+  env.requests[details.requestId] = playSample(env, {
+    buffer: "start",
+    convolver: "kitchen",
+    volume: 0.45,
+    pan: (pan > 0) ? (pan + 5) : (pan - 5),
+    rate: Math.random()*5 + 3
+  });
 };
 
 var notifyRequestStop = function(env, details) {
+  //if (details.type !== "stylesheet") return;
+
+  //console.log("stop", details);
   env.howMany--;
   //env.requests[details.requestId].node.disconnect();
 
   var contentLength = 0;
+  var requestSample = env.requests[details.requestId];
+  if (!requestSample) return;
+
   details.responseHeaders.forEach(function(header) {
     if (header.name === "Content-Length") contentLength = header.value;
   });
 
+  console.log(contentLength);
+
   if (details.statusCode > 400) {
-    console.log(details.statusCode, details.url);
-    playSampleWithBuffer(env, env.buffers.fail, 0, 1, 1, -5.0);
+    playSample(env, {
+      buffer: "trumpet",
+      pan: 0.0,
+      convolver: "spring",
+      rate: 1.9
+    });
   } else {
-    var rate = 20000 / (contentLength * 2);
-    var buffer = details.fromCache ? env.buffers.cache : env.buffers.fetch;
-    var volume = details.fromCache ? 0.15 : 0.75;
-    playSampleWithBuffer(env, buffer, 0, 0.5, rate, (Math.random()*10)-5);
+    var buffer = env.typesToBuffers[details.type] || "fetch";
+
+    playSample(env, {
+      //buffer: details.fromCache ? "cache" : "fetch",
+      buffer: buffer,
+      convolver: details.fromCache ? "telephone" : "spring",
+      volume: 1.5, //details.fromCache ? 0.15 : 0.45,
+      pan: requestSample.pan || Math.random()*10 - 5,
+      rate: 20000 / (contentLength * 2)
+    });
   }
 };
 
