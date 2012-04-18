@@ -67,6 +67,8 @@ var autoTune = (function() {
     var m = n % 12;
     var closest = closestFromList(env.chords[env.currentChord], m);
 
+    //adjust = Math.max(Math.min(adjust, 5), -2);
+
     console.log(f, n, closest, closest+(adjust*12));
     return Math.pow(a, (closest + (adjust*12)));
   };
@@ -80,30 +82,54 @@ var playSample = function(env, hash) {
   var panner = context.createPanner();
   var dryGain = context.createGainNode();
   var wetGain = context.createGainNode();
+  var rate = hash.rate || 1;
 
-  //console.log(hash.rate);
-  //var rate = autoTune(env, hash.rate || 1);
-  //autoTune(env, hash.rate);
-  //source.playbackRate.value = (hash.rate || 1);
-  source.playbackRate.value = autoTune(env, hash.rate || 1);
+  source.playbackRate.value = hash.autoTune ? autoTune(env, rate) : rate;
   wetGain.gain.value = hash.volume || 1;
-  dryGain.gain.value = (hash.volume || 1) / 4;
+  dryGain.gain.value = (hash.volume || 1) / 5;
   source.buffer = env.buffers[hash.buffer];
 
-  panner.setPosition(hash.pan, 0, 0);
+  panner.setPosition(hash.pan||0.0, 0, 0);
   source.connect(panner);
   panner.connect(dryGain);
   panner.connect(wetGain);
   wetGain.connect(env.convolvers[hash.convolver || "kitchen"]);
-  dryGain.connect(context.destination);
+  //dryGain.connect(context.destination);
 
   source.noteOn(hash.start || 0);
 
-  //console.log(source.playbackRate.value);
   hash.source = source;
   hash.ran = context.currentTime;
   return hash;
 };
+
+var writeSineBuffer = function(context) {
+  var buffer = context.createBuffer(1, 44100, 44100);
+  var channel = buffer.getChannelData(0);
+
+  for (var i = 0; i < 44100; i++)
+    channel[i] = 0.5 * Math.sin(i / (44100 / (220 * 2 * Math.PI)));
+
+  return buffer;
+};
+
+// var generateTone = function(freq, level, duration) {
+//   var tone = new Float32Array(duration);
+//   var factors = [0.5, 0.4, 0.3, 0.25, 0.15, 0.1, 0.1];
+//   var factorsLength = factors.length;
+//   var twoPiFreq = 2 * Math.PI * freq;
+//   var val;
+//   var omega;
+//   for (var i = 0; i < duration; i++) {
+//     var omega = twoPiFreq * i / 44110;
+//     val = 0;
+//     for (var j = 0; j < factorsLength; j++) {
+//       val += factors[j] * Math.sin(omega * (j + 1));
+//     }
+//     tone[i] = level * val;
+//   }
+//   return tone;
+// };
 
 var processSignal = function(signal, event) {
   var sampleRate = signal.context.sampleRate;
@@ -112,7 +138,7 @@ var processSignal = function(signal, event) {
 
   for(var i = 0, l = right.length; i < l; ++i) {
     signal.x = signal.x + 1;
-    var val = signal.amplitude  * Math.sin(signal.x / (sampleRate / (signal.frequency * 2 * Math.PI)));
+    var val = signal.amplitude * Math.sin(signal.x / (sampleRate / (signal.frequency * 2 * Math.PI)));
     right[i] = left[i] = val;
   }
 };
@@ -135,26 +161,25 @@ var buildSignal = function(env, frequency) {
 };
 
 var notifyRequestStart = function(env, details) {
-  //console.log("start", details);
-  //env.requests[details.requestId] = buildSignal(env, 110 + (env.howMany*100));
-
-  env.howMany++;
+  //env.holds[details.requestId] = buildSignal(env, 110 + (env.howMany*100));
 
   var pan = Math.random()*10 - 5;
 
+  env.howMany++;
   env.requests[details.requestId] = playSample(env, {
     buffer: "start",
     convolver: "kitchen",
-    volume: 0.75,
-    pan: (pan > 0) ? (pan + 5) : (pan - 5),
-    rate: Math.random()*5 + 3
+    volume: 0.35,
+    pan: (pan > 0) ? (pan + 10) : (pan - 10),
+    rate: Math.random()*5 + 3,
+    autoTune: true
   });
 };
 
 var notifyRequestStop = function(env, details) {
-  //console.log("stop", details);
   env.howMany--;
-  //env.requests[details.requestId].node.disconnect();
+  env.holds[details.requestId] && env.holds[details.requestId].node.disconnect();
+  delete env.holds[details.requestId];
 
   var contentLength = 0;
   var requestSample = env.requests[details.requestId];
@@ -169,10 +194,11 @@ var notifyRequestStop = function(env, details) {
 
   if (details.statusCode > 400) {
     playSample(env, {
-      buffer: "trumpet",
+      buffer: "sosumi",
       convolver: "spring",
       pan: 0.0,
-      rate: 1.9
+      rate: 1,
+      volume: 0.5
     });
   } else {
     var buffer = env.typesToBuffers[details.type] || "fetch";
@@ -180,10 +206,10 @@ var notifyRequestStop = function(env, details) {
     playSample(env, {
       buffer: buffer,
       convolver: details.fromCache ? "telephone" : "spring",
-      volume: 0.95,
-      pan: requestSample.pan || Math.random()*10 - 5,
-      //pan: (runtime - 0.25) * 20 + (Math.random()*3-1.5),
-      rate: 20000 / (contentLength * 2)
+      volume: 0.35,
+      pan: Math.random()*5 - 2.5,
+      rate: 20000 / (contentLength * 2),
+      autoTune: true
     });
   }
 };
