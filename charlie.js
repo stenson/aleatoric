@@ -17,33 +17,31 @@ var env = {
   ],
   currentChord: 0,
   typesToBuffers: {
-             image: "cache", //"cache",
-        stylesheet: "note", //"note",
-            script: "guitar", //fetch",
+    image:          "fetch",
+    stylesheet:     "note",
+    script:         "guitar",
     xmlhttprequest: "ukelele",
-        main_frame: "bass",
-            object: "cowbell"
+    main_frame:     "bass",
+    object:         "cowbell"
   },
   enabled: true
 };
 
 var sampleMap = {
-        bass: "kick3",
-        fail: "hat",
-        note: "A3",
-       cache: "aohat",
-       start: "snare",
-       piano: "piano",
-       fetch: "ahat",
-      spring: "spring",
-      guitar: "guitar_a",
-     ukelele: "ukelele_a",
-     kitchen: "kitchen",
-     trumpet: "trumpet_g",
-     kitchen: "kitchen",
-   telephone: "telephone",
-     cowbell: "cowbell",
-      sosumi: "sosumi"
+  bass: "kick3",
+  fail: "hat",
+  note: "A3",
+  cache: "aohat",
+  start: "snare",
+  fetch: "ahat",
+  spring: "spring",
+  guitar: "guitar_a",
+  sosumi: "sosumi",
+  ukelele: "ukelele_a",
+  kitchen: "kitchen",
+  kitchen: "kitchen",
+  cowbell: "cowbell",
+  telephone: "telephone"
 };
 
 loadSamplesFromMap(env, sampleMap, "sounds/*.wav", function() {
@@ -72,13 +70,4 @@ loadSamplesFromMap(env, sampleMap, "sounds/*.wav", function() {
   chrome.webRequest.onErrorOccurred.addListener(function(details) {
     killAlreadyRinging(env, details);
   }, permissions);
-});
-
-chrome.browserAction.onClicked.addListener(function() {
-  console.log("hello");
-  env.enabled = !env.enabled;
-});
-
-chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
-
 });

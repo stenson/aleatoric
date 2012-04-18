@@ -127,7 +127,7 @@ var killRunawayRings = function(env) {
 
     env.heldNotes.forEach(function(note) {
       if (env.context.currentTime - note.ran > 5) {
-        note.source.looping = false;
+        note.source.loop = false;
         note.source.noteOff(0);
       } else {
         stillHeld.push(note);
