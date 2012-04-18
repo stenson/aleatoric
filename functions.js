@@ -129,7 +129,6 @@ var killRunawayRings = function(env) {
       if (env.context.currentTime - note.ran > 5) {
         note.source.looping = false;
         note.source.noteOff(0);
-        console.log(Math.random(), "DEETS", note.details);
       } else {
         stillHeld.push(note);
       }
@@ -149,8 +148,17 @@ var randomPan = function() {
   return Math.random()*5 - 2.5
 };
 
+var killAlreadyRinging = function(env, details) {
+  var alreadyExists = env.holds[details.requestId];
+  if (alreadyExists) {
+    alreadyExists.source.noteOff(0);
+  }
+};
+
 var notifyRequestStart = function(env, details) {
   var soundPan = randomPan();
+
+  killAlreadyRinging(env, details);
 
   env.holds[details.requestId] = playSample(env, {
     buffer: "sine",
@@ -164,8 +172,6 @@ var notifyRequestStart = function(env, details) {
   });
 
   env.heldNotes.push(env.holds[details.requestId]);
-
-  //var pan = Math.random()*10 - 5;
 
   env.howMany++;
   env.requests[details.requestId] = playSample(env, {

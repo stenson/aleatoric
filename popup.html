@@ -3,16 +3,38 @@
   <head>
     <title>NOISY</title>
     <style>
+      * {
+        padding: 0;
+        margin: 0;
+      }
+
       body {
-        background: hotpink;
+        background: url(bird.jpg);
+        background-size: 100%;
+      }
+
+      #cover {
+        background: rgba(255,255,255,0.8);
         width: 200px;
         height: 200px;
       }
-    </style>
 
-    <!-- JavaScript and HTML must be in separate files for security. -->
-    <script src="popup.js"></script>
+      #controls {
+        padding: 5px;
+      }
+
+      #controls input {
+        margin-bottom: 10px;
+      }
+    </style>
   </head>
   <body>
+    <div id="cover">
+      <div id="controls">
+        <input id="toggle" type="button" value="Be quiet" data-on="Make noise" data-off="Be quiet"/>
+        <input id="volume" type="range" min="0.01" max="2.0" step="any" value="1.0"/>
+      </div>
+    </div>
   </body>
+  <script src="popup.js"></script>
 </html>
