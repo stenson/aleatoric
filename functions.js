@@ -33,7 +33,7 @@ var attachBuffersToConvolvers = function(env) {
   env.convolverNames.forEach(function(name) {
     env.convolvers[name] = env.context.createConvolver();
     env.convolvers[name].buffer = env.buffers[name];
-    env.convolvers[name].connect(env.context.destination);
+    env.convolvers[name].connect(env.compressor);
   });
 };
 
@@ -69,7 +69,7 @@ var autoTune = (function() {
 
     //adjust = Math.max(Math.min(adjust, 5), -2);
 
-    console.log(f, n, closest, closest+(adjust*12));
+    //console.log(f, n, closest, closest+(adjust*12));
     return Math.pow(a, (closest + (adjust*12)));
   };
 })();
@@ -83,6 +83,8 @@ var playSample = function(env, hash) {
   var dryGain = context.createGainNode();
   var wetGain = context.createGainNode();
   var rate = hash.rate || 1;
+
+  if (hash.loop) source.loop = true;
 
   source.playbackRate.value = hash.autoTune ? autoTune(env, rate) : rate;
   wetGain.gain.value = hash.volume || 1;
@@ -100,77 +102,77 @@ var playSample = function(env, hash) {
 
   hash.source = source;
   hash.ran = context.currentTime;
+  hash.wetNode = wetGain;
   return hash;
 };
 
 var writeSineBuffer = function(context) {
   var buffer = context.createBuffer(1, 44100, 44100);
-  var channel = buffer.getChannelData(0);
+  var c0 = buffer.getChannelData(0);
+  var amp = 0.5;
 
-  for (var i = 0; i < 44100; i++)
-    channel[i] = 0.5 * Math.sin(i / (44100 / (220 * 2 * Math.PI)));
+  for (var i = 0; i < 44100; i++) {
+    if (i > 30000 && amp > 0) {
+      amp -= 0.05
+    }
+    c0[i] = amp * Math.sin(i / (44100 / (220 * 2 * Math.PI)));
+  }
 
   return buffer;
 };
 
-// var generateTone = function(freq, level, duration) {
-//   var tone = new Float32Array(duration);
-//   var factors = [0.5, 0.4, 0.3, 0.25, 0.15, 0.1, 0.1];
-//   var factorsLength = factors.length;
-//   var twoPiFreq = 2 * Math.PI * freq;
-//   var val;
-//   var omega;
-//   for (var i = 0; i < duration; i++) {
-//     var omega = twoPiFreq * i / 44110;
-//     val = 0;
-//     for (var j = 0; j < factorsLength; j++) {
-//       val += factors[j] * Math.sin(omega * (j + 1));
-//     }
-//     tone[i] = level * val;
-//   }
-//   return tone;
-// };
+var killRunawayRings = function(env) {
+  setInterval(function() {
+    var stillHeld = [];
 
-var processSignal = function(signal, event) {
-  var sampleRate = signal.context.sampleRate;
-  var right = event.outputBuffer.getChannelData(0);
-  var left = event.outputBuffer.getChannelData(1);
+    env.heldNotes.forEach(function(note) {
+      if (env.context.currentTime - note.ran > 5) {
+        note.source.looping = false;
+        note.source.noteOff(0);
+        console.log(Math.random(), "DEETS", note.details);
+      } else {
+        stillHeld.push(note);
+      }
+    });
 
-  for(var i = 0, l = right.length; i < l; ++i) {
-    signal.x = signal.x + 1;
-    var val = signal.amplitude * Math.sin(signal.x / (sampleRate / (signal.frequency * 2 * Math.PI)));
-    right[i] = left[i] = val;
-  }
+    env.heldNotes = stillHeld;
+  }, 1000);
 };
 
-var buildSignal = function(env, frequency) {
-  var signal = {
-    x: 0,
-    amplitude: 0.15,
-    frequency: frequency,
-    node: env.context.createJavaScriptNode(128, 1, 1),
-    context: env.context
-  };
+var changeChordIntermittently = function(env) {
+  setInterval(function() {
+    if (++env.currentChord == env.chords.length) env.currentChord = 0;
+  }, 5000);
+};
 
-  signal.node.onaudioprocess = function(event) {
-    processSignal(signal, event);
-  };
-
-  signal.node.connect(env.context.destination);
-  return signal;
+var randomPan = function() {
+  return Math.random()*5 - 2.5
 };
 
 var notifyRequestStart = function(env, details) {
-  //env.holds[details.requestId] = buildSignal(env, 110 + (env.howMany*100));
+  var soundPan = randomPan();
 
-  var pan = Math.random()*10 - 5;
+  env.holds[details.requestId] = playSample(env, {
+    buffer: "sine",
+    convolver: "telephone",
+    rate: Math.random()*10 + 10,
+    pan: soundPan,
+    autoTune: true,
+    volume: 0.01,
+    loop: true,
+    details: details
+  });
+
+  env.heldNotes.push(env.holds[details.requestId]);
+
+  //var pan = Math.random()*10 - 5;
 
   env.howMany++;
   env.requests[details.requestId] = playSample(env, {
     buffer: "start",
     convolver: "kitchen",
     volume: 0.35,
-    pan: (pan > 0) ? (pan + 10) : (pan - 10),
+    pan: soundPan,
     rate: Math.random()*5 + 3,
     autoTune: true
   });
@@ -178,8 +180,14 @@ var notifyRequestStart = function(env, details) {
 
 var notifyRequestStop = function(env, details) {
   env.howMany--;
-  env.holds[details.requestId] && env.holds[details.requestId].node.disconnect();
-  delete env.holds[details.requestId];
+
+  var previous = env.holds[details.requestId];
+
+  if (previous) {
+    previous.source.loop = false;
+    previous.source.noteOff(0);
+    delete env.holds[details.requestId];
+  }
 
   var contentLength = 0;
   var requestSample = env.requests[details.requestId];
@@ -196,9 +204,9 @@ var notifyRequestStop = function(env, details) {
     playSample(env, {
       buffer: "sosumi",
       convolver: "spring",
-      pan: 0.0,
+      pan: previous.pan || 0.0,
       rate: 1,
-      volume: 0.5
+      volume: 0.45
     });
   } else {
     var buffer = env.typesToBuffers[details.type] || "fetch";
@@ -207,7 +215,7 @@ var notifyRequestStop = function(env, details) {
       buffer: buffer,
       convolver: details.fromCache ? "telephone" : "spring",
       volume: 0.35,
-      pan: Math.random()*5 - 2.5,
+      pan: previous.pan || randomPan(),
       rate: 20000 / (contentLength * 2),
       autoTune: true
     });
