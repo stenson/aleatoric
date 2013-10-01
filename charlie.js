@@ -9,11 +9,7 @@ var env = {
   convolverNames: ["kitchen", "telephone", "spring"],
   runtimes: [],
   chords: [
-    [0, 2, 3, 7, 9, 11],
-    //[2, 4, 9],
-    //[5, 9, 11]
-    //[2, 5, 9, 10],
-    //[3, 6, 8, 10]
+    [0, 2, 3, 7, 9, 11]
   ],
   currentChord: 0,
   typesToBuffers: {
@@ -29,7 +25,7 @@ var env = {
 
 var sampleMap = {
   bass: "kick3",
-  fail: "hat",
+  fail: "sosumi",
   note: "A3",
   cache: "aohat",
   start: "snare",
@@ -44,20 +40,18 @@ var sampleMap = {
   telephone: "telephone"
 };
 
+var permissions = { urls: ["*://*/*"] };
+
 loadSamplesFromMap(env, sampleMap, "sounds/*.wav", function() {
   env.gain = env.context.createGainNode();
   env.gain.connect(env.context.destination);
   env.compressor = env.context.createDynamicsCompressor();
   env.compressor.connect(env.gain);
-  //env.gain.gain.value = 0.05;
 
   attachBuffersToConvolvers(env);
   env.buffers.sine = writeSineBuffer(env.context);
 
   killRunawayRings(env);
-  changeChordIntermittently(env);
-
-  var permissions = { urls: ["*://*/*"] };
 
   chrome.webRequest.onBeforeRequest.addListener(function(details) {
     env.enabled && notifyRequestStart(env, details);

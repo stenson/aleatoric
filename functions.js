@@ -66,10 +66,6 @@ var autoTune = (function() {
     var adjust = Math.floor(n/12);
     var m = n % 12;
     var closest = closestFromList(env.chords[env.currentChord], m);
-
-    //adjust = Math.max(Math.min(adjust, 5), -2);
-
-    //console.log(f, n, closest, closest+(adjust*12));
     return Math.pow(a, (closest + (adjust*12)));
   };
 })();
@@ -136,12 +132,6 @@ var killRunawayRings = function(env) {
 
     env.heldNotes = stillHeld;
   }, 1000);
-};
-
-var changeChordIntermittently = function(env) {
-  setInterval(function() {
-    if (++env.currentChord == env.chords.length) env.currentChord = 0;
-  }, 5000);
 };
 
 var randomPan = function() {
