@@ -76,8 +76,8 @@ var playSample = function(env, hash) {
   var context = env.context;
   var source = context.createBufferSource();
   var panner = context.createPanner();
-  var dryGain = context.createGainNode();
-  var wetGain = context.createGainNode();
+  var dryGain = context.createGain();
+  var wetGain = context.createGain();
   var rate = hash.rate || 1;
 
   if (hash.loop) source.loop = true;
@@ -94,7 +94,7 @@ var playSample = function(env, hash) {
   wetGain.connect(env.convolvers[hash.convolver || "kitchen"]);
   //dryGain.connect(context.destination);
 
-  source.noteOn(hash.start || 0);
+  source.start(hash.start || 0);
 
   hash.source = source;
   hash.ran = context.currentTime;
@@ -124,7 +124,7 @@ var killRunawayRings = function(env) {
     env.heldNotes.forEach(function(note) {
       if (env.context.currentTime - note.ran > 5) {
         note.source.loop = false;
-        note.source.noteOff(0);
+        note.source.stop(0);
       } else {
         stillHeld.push(note);
       }
@@ -141,7 +141,7 @@ var randomPan = function() {
 var killAlreadyRinging = function(env, details) {
   var alreadyExists = env.holds[details.requestId];
   if (alreadyExists) {
-    alreadyExists.source.noteOff(0);
+    alreadyExists.source.stop(0);
   }
 };
 
@@ -181,7 +181,7 @@ var notifyRequestStop = function(env, details) {
 
   if (previous) {
     previous.source.loop = false;
-    previous.source.noteOff(0);
+    previous.source.stop(0);
     delete env.holds[details.requestId];
   }
 
@@ -206,15 +206,13 @@ var notifyRequestStop = function(env, details) {
     });
   } else {
     var buffer = env.typesToBuffers[details.type] || "fetch";
-
     playSample(env, {
       buffer: buffer,
       convolver: details.fromCache ? "telephone" : "spring",
       volume: 0.35,
       pan: previous.pan || randomPan(),
-      rate: 20000 / (contentLength * 2),
+      rate: Math.min(20000 / (contentLength * 2), 20),
       autoTune: true
     });
   }
 };
-

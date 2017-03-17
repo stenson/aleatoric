@@ -1,6 +1,6 @@
 
 var env = {
-  context: new webkitAudioContext(),
+  context: new AudioContext(),
   buffers: {},
   requests: {},
   holds: {},
@@ -43,7 +43,7 @@ var sampleMap = {
 var permissions = { urls: ["*://*/*"] };
 
 loadSamplesFromMap(env, sampleMap, "sounds/*.wav", function() {
-  env.gain = env.context.createGainNode();
+  env.gain = env.context.createGain();
   env.gain.connect(env.context.destination);
   env.compressor = env.context.createDynamicsCompressor();
   env.compressor.connect(env.gain);

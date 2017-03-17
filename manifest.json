@@ -8,9 +8,7 @@
     "default_popup": "popup.html"
   },
   "icons": {
-    "16": "aleatoric-icon-16.png",
-    "48": "aleatoric-icon-48.png",
-    "128": "aleatoric-icon-128.png"
+    "16": "icon.png"
   },
   "background": {
     "scripts": ["functions.js", "charlie.js"]
