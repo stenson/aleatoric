@@ -1,5 +1,5 @@
 {
-  "name": "Aleatoric",
+  "name": "Aleatory",
   "version": "0.1",
   "manifest_version": 2,
   "description": "Listen to your browser make requests.",
@@ -11,7 +11,7 @@
     "16": "icon.png"
   },
   "background": {
-    "scripts": ["functions.js", "charlie.js"]
+    "scripts": ["util.js", "functions.js", "charlie.js"]
   },
   "permissions": [
     "webRequest",

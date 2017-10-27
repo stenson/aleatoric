@@ -138,6 +138,25 @@ var randomPan = function() {
   return Math.random()*5 - 2.5
 };
 
+// pre: seed is a string
+
+function pseudoRandom(seed){
+  return parseInt(md5(seed), 16)/ (2**128);
+}
+
+const nonce = Math.random();
+
+function deterministicPan(details){
+  const largeKey = details.method + " " + details.url.split('?')[0];
+  const smallKey = 'small key: ' + details.url; // including qstring
+  const isXHR = details.type === "xmlhttprequest";
+  const largeSpread = isXHR ? 0.7 : 0.9;
+  const smallSpread = isXHR ? 0.1 : 0.1;
+  const pan = ((pseudoRandom(largeKey + nonce) - 0.5) * largeSpread) +
+         ((pseudoRandom(smallKey + nonce) - 0.5) * smallSpread);
+  return pan;
+}
+
 var killAlreadyRinging = function(env, details) {
   var alreadyExists = env.holds[details.requestId];
   if (alreadyExists) {
@@ -146,7 +165,7 @@ var killAlreadyRinging = function(env, details) {
 };
 
 var notifyRequestStart = function(env, details) {
-  var soundPan = randomPan();
+  var soundPan = deterministicPan(details);
 
   killAlreadyRinging(env, details);
 
