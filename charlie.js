@@ -20,7 +20,7 @@ var env = {
     main_frame:     "bass",
     object:         "cowbell"
   },
-  enabled: true
+  enabled: false
 };
 
 var sampleMap = {
