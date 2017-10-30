@@ -1,3 +1,22 @@
+// Take away all magic numbers!!
+var cfg = {
+  largeSpread: 0.7,
+  xhrLargeSpread: 0.9,
+  smallSpread: 0.1,
+  xhrSmallSpread: 0.1,
+  notesInScale: 12,
+  dryGainMult: 0.2,
+  ringDuration: 5,
+  ringVolume: 0.01,
+  requestStartVolume: 0.35,
+  requestEndVolume: 0.35,
+  errorVolume: 0.45,
+
+  getRequestEndPitch: (size) => Math.min(20000 / (size * 2), 20),
+};
+
+
+
 var loadSampleWithUrl = function(context, url, callback, errback) {
   var request = new XMLHttpRequest();
   request.open("GET", url, true);
@@ -59,19 +78,19 @@ var closestFromList = function(list, x) {
 };
 
 var autoTune = (function() {
-  var a = Math.pow(2, 1/12);
+  var a = Math.pow(2, 1/cfg.notesInScale);
 
   return function(env, f) {
     var n = Math.round(Math.log(f / 1) / Math.log(a));
-    var adjust = Math.floor(n/12);
-    var m = n % 12;
+    var adjust = Math.floor(n/cfg.notesInScale);
+    var m = n % cfg.notesInScale;
     var closest = closestFromList(env.chords[env.currentChord], m);
-    return Math.pow(a, (closest + (adjust*12)));
+    return Math.pow(a, (closest + (adjust*cfg.notesInScale)));
   };
 })();
 
 var playSample = function(env, hash) {
-  /* .rate, .volume, .buffer, .convolver, .pan */
+  /* .rate, .volume, .buffer, .convolver, .pan, .beef */
 
   var context = env.context;
   var source = context.createBufferSource();
@@ -79,12 +98,13 @@ var playSample = function(env, hash) {
   var dryGain = context.createGain();
   var wetGain = context.createGain();
   var rate = hash.rate || 1;
+  var beef = hash.beef || 0;
 
   if (hash.loop) source.loop = true;
 
   source.playbackRate.value = hash.autoTune ? autoTune(env, rate) : rate;
   wetGain.gain.value = hash.volume || 1;
-  dryGain.gain.value = (hash.volume || 1) / 5;
+  dryGain.gain.value = (hash.volume || 1) * cfg.dryGainMult;
   source.buffer = env.buffers[hash.buffer];
 
   panner.setPosition(hash.pan||0.0, 0, 0);
@@ -122,7 +142,7 @@ var killRunawayRings = function(env) {
     var stillHeld = [];
 
     env.heldNotes.forEach(function(note) {
-      if (env.context.currentTime - note.ran > 5) {
+      if (env.context.currentTime - note.ran > cfg.ringDuration) {
         note.source.loop = false;
         note.source.stop(0);
       } else {
@@ -138,8 +158,6 @@ var randomPan = function() {
   return Math.random()*5 - 2.5
 };
 
-// pre: seed is a string
-
 function pseudoRandom(seed){
   return parseInt(md5(seed), 16)/ (2**128);
 }
@@ -150,8 +168,8 @@ function deterministicPan(details){
   const largeKey = details.method + " " + details.url.split('?')[0];
   const smallKey = 'small key: ' + details.url; // including qstring
   const isXHR = details.type === "xmlhttprequest";
-  const largeSpread = isXHR ? 0.7 : 0.9;
-  const smallSpread = isXHR ? 0.1 : 0.1;
+  const largeSpread = isXHR ? cfg.xhrLargeSpread : cfg.largeSpread;
+  const smallSpread = isXHR ? cfg.xhrSmallSpread : cfg.smallSpread;
   const pan = ((pseudoRandom(largeKey + nonce) - 0.5) * largeSpread) +
          ((pseudoRandom(smallKey + nonce) - 0.5) * smallSpread);
   return pan;
@@ -175,7 +193,7 @@ var notifyRequestStart = function(env, details) {
     rate: Math.random()*10 + 10,
     pan: soundPan,
     autoTune: true,
-    volume: 0.01,
+    volume: cfg.ringVolume,
     loop: true,
     details: details
   });
@@ -186,7 +204,7 @@ var notifyRequestStart = function(env, details) {
   env.requests[details.requestId] = playSample(env, {
     buffer: "start",
     convolver: "kitchen",
-    volume: 0.35,
+    volume: cfg.requestStartVolume,
     pan: soundPan,
     rate: Math.random()*5 + 3,
     autoTune: true
@@ -221,16 +239,16 @@ var notifyRequestStop = function(env, details) {
       convolver: "spring",
       pan: previous.pan || 0.0,
       rate: 1,
-      volume: 0.45
+      volume: cfg.errorVolume,
     });
   } else {
     var buffer = env.typesToBuffers[details.type] || "fetch";
     playSample(env, {
       buffer: buffer,
       convolver: details.fromCache ? "telephone" : "spring",
-      volume: 0.35,
+      volume: cfg.requestEndVolume,
       pan: previous.pan || randomPan(),
-      rate: Math.min(20000 / (contentLength * 2), 20),
+      rate: cfg.getRequestEndPitch(contentLength),
       autoTune: true
     });
   }
