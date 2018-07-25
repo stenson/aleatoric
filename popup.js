@@ -42,3 +42,42 @@ var types = byId("request-types");
 for (var bufferName in env.typesToBuffers) {
   types.appendChild(makeButton(bufferName, env.typesToBuffers[bufferName]));
 }
+
+function removeWhitelistEntry(elem, hostname){
+  var idx = env.hostnameWhitelist.indexOf(hostname);
+  if (idx >= 0) {
+    env.hostnameWhitelist.splice(idx, 1);
+  }
+  elem.remove();
+}
+
+// Whitelist code:
+var whitelist = byId('whitelist');
+var whitelistForm = byId('whitelist-adder');
+function makeWhitelistEntry(hostname){
+  var text = document.createTextNode(hostname);
+  var btn = document.createElement('button');
+  btn.innerHTML = 'x';
+  var li = document.createElement('li');
+  li.appendChild(btn)
+  li.appendChild(text);
+  handle('click', btn, function(){
+    removeWhitelistEntry(li, hostname);
+  });
+  return li;
+}
+
+function addHostToListElem(hostname){
+  whitelist.appendChild(makeWhitelistEntry(hostname));
+}
+
+handle('submit', whitelistForm, function(e){
+  e.preventDefault();
+  var hostname = whitelistForm[0].value;
+  env.hostnameWhitelist.push(hostname);
+  addHostToListElem(hostname);
+  whitelistForm[0].value = '';
+  byId('');
+});
+
+env.hostnameWhitelist.forEach(addHostToListElem);

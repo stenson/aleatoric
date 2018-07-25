@@ -5,6 +5,7 @@ var env = {
   requests: {},
   holds: {},
   heldNotes: [],
+  hostnameWhitelist: [],
   howMany: 0,
   convolverNames: ["kitchen", "telephone", "spring"],
   runtimes: [],

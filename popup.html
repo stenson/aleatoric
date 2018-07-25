@@ -16,7 +16,7 @@
       #cover {
         background: rgba(255,255,255,0.1);
         width: 200px;
-        height: 200px;
+        height: 300px;
       }
 
       #controls {
@@ -51,6 +51,15 @@
       button:focus {
         background: rgba(255,255,255,0.1);
       }
+
+      #filters {
+        padding: 5px;
+      }
+
+      #filters > * {
+        padding: 2px;
+      }
+
     </style>
   </head>
   <body>
@@ -61,6 +70,15 @@
         <div id="request-types">
         </div>
       </div>
+    </div>
+    <div id="filters">
+      <h3>request url includes string:</h3>
+      <ul id="whitelist">
+      </ul>
+      <form id="whitelist-adder">
+        <input type="text">
+        <input type="submit" value="add to whitelist">
+      </form>
     </div>
   </body>
   <script src="popup.js"></script>

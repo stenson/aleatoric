@@ -183,6 +183,17 @@ var killAlreadyRinging = function(env, details) {
 };
 
 var notifyRequestStart = function(env, details) {
+  // filters
+  var satisfiesFilters = env.hostnameWhitelist.reduce(
+    function(acc, cur){
+      return acc && (details.url.indexOf(cur) >= 0)
+    },
+    true
+  );
+  if (!satisfiesFilters) {
+    return;
+  }
+
   var soundPan = deterministicPan(details);
 
   killAlreadyRinging(env, details);
@@ -199,7 +210,6 @@ var notifyRequestStart = function(env, details) {
   });
 
   env.heldNotes.push(env.holds[details.requestId]);
-
   env.howMany++;
   env.requests[details.requestId] = playSample(env, {
     buffer: "start",
