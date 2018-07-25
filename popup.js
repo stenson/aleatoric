@@ -10,11 +10,13 @@ var handle = function(eventName, el, cback) {
     cback(event, el);
   }, true);
 };
-
-handle("mousedown", byId("toggle"), function(event, el) {
+var toggleBtn = byId("toggle");
+handle("mousedown", toggleBtn, function(event, el) {
   env.enabled = !env.enabled;
   el.value = el.getAttribute(env.enabled ? 'data-off' : 'data-on');
 });
+
+toggleBtn.value = toggleBtn.getAttribute(env.enabled ? 'data-off' : 'data-on');
 
 var volume = byId("volume");
 volume.value = env.gain.gain.value;
