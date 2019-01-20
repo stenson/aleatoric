@@ -12,7 +12,7 @@
   },
   "background": {
     "scripts": [
-      "src/background/util.js",
+      "lib/vendor/md5.js",
       "src/background/functions.js",
       "src/background/charlie.js"
     ]
