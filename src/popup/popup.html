@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>NOISY</title>
+    <link rel="stylesheet" type="text/css" href="popup.css">
+  </head>
+  <body>
+    <div id="cover">
+      <div id="controls">
+        <input id="toggle" type="button" value="Make noise" data-on="Make noise" data-off="Be quiet" style="margin-bottom:15px"/>
+        <input id="volume" type="range" min="0.01" max="2.0" step="any" value="1.0"/>
+        <div id="request-types">
+        </div>
+      </div>
+    </div>
+    <div id="filters">
+      <h3>request url includes string:</h3>
+      <ul id="whitelist">
+      </ul>
+      <form id="whitelist-adder">
+        <input type="text">
+        <input type="submit" value="add to whitelist">
+      </form>
+    </div>
+  </body>
+  <script src="popup.js"></script>
+</html>
