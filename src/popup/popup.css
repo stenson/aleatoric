@@ -4,14 +4,14 @@
 }
 
 body {
-  background: #3e7f51;
+  background: white;
   background-size: 100%;
-  color: white;
+  color: black;
 }
 
 #cover {
   background: rgba(255, 255, 255, 0.1);
-  width: 200px;
+  width: 300px;
 }
 
 h3 {
@@ -35,7 +35,7 @@ input#volume {
   display: flex;
 }
 
-input#toggle, button {
+input#toggle, #request-types button {
   padding: 8px;
   margin: 4px;
   background: rgba(255, 255, 255, 0.3);
@@ -44,7 +44,6 @@ input#toggle, button {
   font-weight: bold;
   display: inline-block;
   box-shadow: 0 0 1px rgba(0, 0, 0, 0.2);
-  color: white;
   font-size: 16px;
 }
 
@@ -68,11 +67,24 @@ label {
   font-size: 13px;
 }
 
-#whitelist-adder form {
+#whitelist button {
+  padding: 0 5px;
+  margin-left: 5px;
+}
+
+#whitelist-adder {
   display: flex;
 }
 
-/* Toggle stolen off of w3schools */
+#whitelist-adder input {
+  margin-right: 5px;
+}
+
+/* 
+----
+  Toggle stolen off of w3schools
+----
+*/
 .switch {
   display: flex;
   justify-content: space-between;
@@ -132,3 +144,8 @@ input:checked + .slider:before {
   border-radius: 50%;
 }
 
+/* 
+----
+  End toggle stolen off of w3schools
+----
+*/

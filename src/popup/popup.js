@@ -62,8 +62,8 @@ function makeWhitelistEntry(hostname){
   var btn = document.createElement('button');
   btn.innerHTML = 'x';
   var li = document.createElement('li');
-  li.appendChild(btn)
   li.appendChild(text);
+  li.appendChild(btn)
   handle('click', btn, function(){
     removeWhitelistEntry(li, hostname);
   });
