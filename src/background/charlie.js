@@ -9,6 +9,7 @@ var env = {
   howMany: 0,
   convolverNames: ["kitchen", "telephone", "spring"],
   runtimes: [],
+  onlyForActiveTab: true,
   chords: [
     [0, 2, 3, 7, 9, 11]
   ],
@@ -43,6 +44,24 @@ var sampleMap = {
 
 var permissions = { urls: ["*://*/*"] };
 
+function onlyForActiveTab(fn, env){
+  return function(details){
+    if (env.onlyForActiveTab) {
+      chrome.tabs.get(details.tabId, (tab) => {
+        tab && tab.active && fn(details);
+      });
+    } else {
+      fn(details);
+    }
+  }
+};
+
+chrome.tabs.onActivated.addListener(function(){
+  if(env.onlyForActiveTab) {
+    quickKillAllRings(env);
+  }
+})
+
 loadSamplesFromMap(env, sampleMap, "sounds/*.wav", function() {
   env.gain = env.context.createGain();
   env.gain.connect(env.context.destination);
@@ -54,15 +73,29 @@ loadSamplesFromMap(env, sampleMap, "sounds/*.wav", function() {
 
   killRunawayRings(env);
 
-  chrome.webRequest.onBeforeRequest.addListener(function(details) {
-    env.enabled && notifyRequestStart(env, details);
-  }, permissions, []);
+  chrome.webRequest.onBeforeRequest.addListener(
+    onlyForActiveTab(
+      function(details) {
+        env.enabled && notifyRequestStart(env, details);
+      },
+      env
+    ), permissions, []);
 
-  chrome.webRequest.onCompleted.addListener(function(details) {
-    env.enabled && notifyRequestStop(env, details);
-  }, permissions, ["responseHeaders"]);
+  chrome.webRequest.onCompleted.addListener(
+    onlyForActiveTab(
+      function(details) {
+        env.enabled && notifyRequestStop(env, details);
+      },
+      env
+    ), 
+    permissions, ["responseHeaders"]);
 
-  chrome.webRequest.onErrorOccurred.addListener(function(details) {
-    killAlreadyRinging(env, details);
-  }, permissions);
+  chrome.webRequest.onErrorOccurred.addListener(
+    onlyForActiveTab(
+      function(details) {
+        killAlreadyRinging(env, details);
+      },
+      env
+    ),
+    permissions);
 });

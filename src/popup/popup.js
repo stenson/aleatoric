@@ -19,6 +19,18 @@ handle("click", toggleBtn, function(event, el) {
 toggleBtn.checked = env.enabled;
 // End initialize the toggle button
 
+// Initialize the toggle button for active tabs 
+var currentTabBtn = byId("current-tab");
+handle("click", currentTabBtn, function(event, el) {
+  env.onlyForActiveTab = el.checked;
+  if (env.onlyForActiveTab) {
+    bgPage.quickKillAllRings(env);
+  }
+});
+currentTabBtn.checked = env.onlyForActiveTab;
+// End initialize the toggle button
+
+
 var volume = byId("volume");
 volume.value = env.gain.gain.value;
 handle("mouseup", volume, function(event, el) {

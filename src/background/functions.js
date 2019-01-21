@@ -154,6 +154,14 @@ var killRunawayRings = function(env) {
   }, 1000);
 };
 
+var quickKillAllRings = function(env){
+  env.heldNotes.forEach(function(note) {
+    note.source.loop = false;
+    note.source.stop(0);
+  });
+  env.heldNotes = [];
+};
+
 var randomPan = function() {
   return Math.random()*5 - 2.5
 };
