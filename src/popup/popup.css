@@ -1,56 +1,134 @@
 * {
-    padding: 0;
-    margin: 0;
-  }
+  padding: 0;
+  margin: 0;
+}
 
-  body {
-    background: #3e7f51;
-    background-size: 100%;
-  }
+body {
+  background: #3e7f51;
+  background-size: 100%;
+  color: white;
+}
 
-  #cover {
-    background: rgba(255,255,255,0.1);
-    width: 200px;
-    height: 300px;
-  }
+#cover {
+  background: rgba(255, 255, 255, 0.1);
+  width: 200px;
+}
 
-  #controls {
-    padding: 5px;
-  }
+h3 {
+  padding: 5px;
+}
 
-  #controls input {
-    margin-bottom: 10px;
-  }
+#controls {
+  border-top: 2px solid rgba(0, 0, 0, 0.15);
+}
 
-  input#volume {
-    width: 100%;
-  }
+#controls > .control-item {
+  padding: 5px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+}
 
-  input#toggle, button {
-    padding: 8px;
-    margin: 4px;
-    background: rgba(255,255,255,0.3);
-    border: none;
-    font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
-    font-weight: bold;
-    display: inline-block;
-    box-shadow: 0 0 1px rgba(0,0,0,0.2);
-    color: white;
-    font-size: 16px;
-  }
+input#volume {
+  width: 100%;
+}
 
-  input#toggle {
-    font-size: 24px;
-  }
+#volume-control {
+  display: flex;
+}
 
-  button:focus {
-    background: rgba(255,255,255,0.1);
-  }
+input#toggle, button {
+  padding: 8px;
+  margin: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  display: inline-block;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.2);
+  color: white;
+  font-size: 16px;
+}
 
-  #filters {
-    padding: 5px;
-  }
+input#toggle {
+  font-size: 24px;
+}
 
-  #filters > * {
-    padding: 2px;
-  }
+button:focus {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+#filters {
+  padding: 5px;
+}
+
+#filters>* {
+  padding: 2px;
+}
+
+label {
+  font-size: 13px;
+}
+
+#whitelist-adder form {
+  display: flex;
+}
+
+/* Toggle stolen off of w3schools */
+.switch {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.label-text {
+  user-select: none;
+  padding-right: 10px;
+}
+
+.slider {
+  width: 30px;
+  height: 17px;
+  position: relative;
+  display: inline-block;
+  background-color: #ccc;
+  transition: .1s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 13px;
+  width: 13px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .1s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(13px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 17px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+

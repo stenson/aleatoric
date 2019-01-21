@@ -10,13 +10,14 @@ var handle = function(eventName, el, cback) {
     cback(event, el);
   }, true);
 };
-var toggleBtn = byId("toggle");
-handle("mousedown", toggleBtn, function(event, el) {
-  env.enabled = !env.enabled;
-  el.value = el.getAttribute(env.enabled ? 'data-off' : 'data-on');
-});
 
-toggleBtn.value = toggleBtn.getAttribute(env.enabled ? 'data-off' : 'data-on');
+// Initialize the toggle button 
+var toggleBtn = byId("enable-aleatoric");
+handle("click", toggleBtn, function(event, el) {
+  env.enabled = el.checked;
+});
+toggleBtn.checked = env.enabled;
+// End initialize the toggle button
 
 var volume = byId("volume");
 volume.value = env.gain.gain.value;
